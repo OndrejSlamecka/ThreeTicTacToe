@@ -51,6 +51,10 @@ class Game
 
 			@onGameEnd(username)
 
+		else if this.isBoardFull()
+			payload = JSON.stringify({'tie': true})
+			this.broadcast(payload)
+			@onGameEnd(null)
 		else
 			@onTurn = (@onTurn + 1) % 3
 
