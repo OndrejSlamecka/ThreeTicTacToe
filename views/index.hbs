@@ -1,0 +1,57 @@
+<div id="section-lobby">
+	<div class="row">
+		<h1 class="col-md-8">Lobby</h1>
+
+		<div class="col-md-4 text-right logout-box">
+			<a href="/logout">Logout</a>
+		</div>
+	</div> <!-- /.row -->
+
+	<div class="row">
+		<div class="col-md-12">
+			<div class="alert alert-warning" role="alert" id="loss" style="display: none;">You lost and have to play again, I have put you in the queue again.</div>
+
+			<p>Wait in the queue until we can match you with two other opponents.</p>
+
+			<p>Players waiting: <span id="playersInQueue"></span> (including you)</p>
+		</div>
+	</div>
+</div> <!-- /#section-lobby -->
+
+<div id="section-game" style="display: none;">
+	<div class="row">
+		<h1 class="col-md-8">Game</h1>
+
+		<div class="col-md-4 text-right logout-box">
+			<a href="/logout">Logout</a>
+		</div>
+	</div> <!-- /.row -->
+
+	<div class="row">
+		<div class="col-md-12">
+			<div class="alert alert-success" role="alert" id="victory" style="display: none;">
+				You won! The password is: <code class="password" id="password"></code>
+			</div>
+		</div>
+	</div> <!-- /.row -->
+
+	<div class="row">
+		<div class="col-md-8">
+			<p><span id="turn-status"></span> Next mark: <span id="turn-mark"></span></p>
+		</div>
+		<div class="col-md-4 text-right">
+			Remaining: <span id="timer"></span>
+		</div>
+	</div> <!-- /.row -->
+
+	<div class="row">
+		<div class="col-md-12">
+			<table class="table-game" id="game"></table>
+		</div>
+	</div> <!-- /.row -->
+</div> <!-- /#section-game -->
+
+<p><em>Don't refresh the page, it's not prepared for that!</em></p>
+
+<script src="./bundle.js"></script>
+
