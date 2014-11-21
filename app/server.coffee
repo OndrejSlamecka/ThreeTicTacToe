@@ -115,7 +115,8 @@ wss.on('connection', (ws) ->
 
 			if 'turn' of payload
 				turn = payload.turn
-				Games[UsersGames[username]].turn(username, turn.x, turn.y)
+				if UsersGames[username]? # user may be clicking a dead game
+					Games[UsersGames[username]].turn(username, turn.x, turn.y)
 		)
 
 		ws.on('close', (code, message) ->
