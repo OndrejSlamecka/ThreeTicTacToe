@@ -13,6 +13,9 @@ class HumanPlayer
 			turn = payload.turn
 			@game.turn(@name, turn.x, turn.y) if @game?
 
+		if 'leaveAndJoinQueue' of payload
+			@game.disband() # it checks inside whether it is allowed
+
 
 	onEnqueue: (n) ->
 		@connection.send(JSON.stringify({'playersInQueue' : n}))

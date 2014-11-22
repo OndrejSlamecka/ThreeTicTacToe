@@ -2,7 +2,25 @@ $ = require('jquery')
 CountdownTimer = require('./CountdownTimer.coffee')
 
 window.WebSocket = window.WebSocket || window.MozWebSocket
-connection = new window.WebSocket('ws://' + window.location.hostname + ':3010') # host contains port number, we don't want that
+
+connect = () ->
+	connection = new window.WebSocket('ws://' + window.location.hostname + ':3010') # host contains port number, we don't want that
+
+	connection.onmessage = (event) ->
+		payload = JSON.parse(event.data)
+		for key of payload
+			handlers[key](payload[key])
+
+	connection.onopen = () ->
+		$('.disconnected-warning').hide()
+
+	#connection.onerror = (error) ->	setTimeout connect, 5*1000
+
+	connection.onclose = (close) ->
+		$('.disconnected-warning').show()
+		setTimeout connect, 1000
+
+connect()
 
 markSign = (mark) ->
 	if mark == 1
@@ -19,6 +37,15 @@ onTurn = null
 mark = 1
 timer = new CountdownTimer($('#timer'), 10)
 paused = false
+leaveAndJoinQueueTimeout = null
+
+$('#leaveAndJoinQueue').on 'click', (ev) ->
+	ev.preventDefault()
+	payload = JSON.stringify({
+		'leaveAndJoinQueue': true
+	})
+	connection.send(payload)
+
 
 onCellClick = (event) ->
 	if onTurn != username || paused
@@ -46,6 +73,11 @@ handlers.pause = (data) ->
 	timer.stop()
 	$('#pause').slideDown()
 
+	if leaveAndJoinQueueTimeout == null
+		leaveAndJoinQueueTimeout = setTimeout () ->
+			$('#leaveAndJoinQueue').slideDown()
+		, 30*1000 # Also present in app/Game.coffee
+
 handlers.resume = (data) ->
 	if !gameLoaded
 		return
@@ -56,6 +88,10 @@ handlers.resume = (data) ->
 	mark = data.mark
 	timer.start()
 	$('#pause').slideUp()
+
+	clearTimeout(leaveAndJoinQueueTimeout)
+	$('#leaveAndJoinQueue').hide()
+
 	updateOnTurnStatus()
 
 handlers.playersInQueue = (data) ->
@@ -64,7 +100,9 @@ handlers.playersInQueue = (data) ->
 handlers.game = (data) ->
 	gameLoaded = true
 	$('#pause').hide()
-	$('#tie').slideUp()
+	$('#loss').hide()
+	$('#tie').hide()
+	$('#leaveAndJoinQueue').hide()
 
 	$('#section-lobby').slideUp()
 	$('#section-game').slideDown()
@@ -98,32 +136,18 @@ handlers.turn = (data) ->
 	updateOnTurnStatus()
 
 handlers.victory = (data) ->
-	$('#tie').slideUp()
 	$('#cell-' + data.x + '-' + data.y).html(markSign(mark))
 	$('#password').html(data.password)
 	$('#victory').slideDown()
 
 handlers.loss = () ->
-	$('#tie').slideUp() # May have been shown from before
 	$('#loss').show()
 	$('#section-lobby').slideDown()
 	$('#section-game').slideUp()
 
 handlers.tie = () ->
-	$('#loss').slideUp() # May have been shown from before
 	$('#tie').show()
 	$('#section-lobby').slideDown()
 	$('#section-game').slideUp()
-
-connection.onmessage = (event) ->
-	payload = JSON.parse(event.data)
-	for key of payload
-		handlers[key](payload[key])
-
-
-connection.onerror = (error) ->
-	console.log error
-connection.onclose = (close) ->
-	console.log 'connection closed' # TODO: PRettier!
 
 

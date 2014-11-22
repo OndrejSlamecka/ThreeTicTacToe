@@ -68,17 +68,33 @@ class Game
 	pause: () ->
 		clearInterval(@timer)
 		@paused = true
+		@leavableTimeout = setTimeout () =>
+			@leavable = true
+		, 30*1000 # Also present in client_src/game.coffee
+
 		_.each @players, (p) ->
 			p.onPause()
 
 
 	resume: () =>
+		@leavable = false
+		clearTimeout(@leavableTimeout)
+
 		@timeRemaining = 10
 		clearInterval(@timer)
 		@timer = setInterval this.timerTick, 1000
 		@paused = false
 		_.each @players, (p) =>
 			p.onResume(@onTurn, @mark)
+
+
+	disband: () -> this.tie() if @leavable
+
+
+	tie: () ->
+		_.each @players, (p) -> p.onTie()
+		clearInterval(@timer)
+		@onGameEnd(@key, null)
 
 
 	turn: (username, x, y) ->
@@ -102,9 +118,7 @@ class Game
 			@onGameEnd(@key, username)
 
 		else if @filledCells == @N*@N
-			_.each @players, (p) -> p.onTie()
-			clearInterval(@timer)
-			@onGameEnd(@key, null)
+			this.tie()
 		else
 			@onTurn = (@onTurn + 1) % 3
 			_.each @players, (p) => p.onTurn(x, y, @mark, @order[@onTurn])

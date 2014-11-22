@@ -2,6 +2,8 @@
 Setup
 -----
 
+	Install redis
+
 	$ npm install [-g] grunt-cli
 	$ npm install
 
@@ -15,9 +17,8 @@ Build
 Deploy
 ------
 
-	$ npm install -g forver
-	$ forver -c coffee app/server.coffee
-
+	$ npm install -g forever
+	$ forever -c coffee app/server.coffee
 
 
 TODO

@@ -1,5 +1,6 @@
 _ = require('underscore')
 Game = require('./Game.coffee')
+HumanPlayer = require('./HumanPlayer.coffee')
 PauseOnTurnPlayer = require('./PauseOnTurnPlayer.coffee')
 
 class GameManager
@@ -9,7 +10,7 @@ class GameManager
 	constructor: (@db) ->
 
 
-	onGameEnd: (key, winner) ->
+	onGameEnd: (key, winner) =>
 		players = @games[key].players
 		delete @games[key]
 		for name, player of players
