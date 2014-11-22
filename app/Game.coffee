@@ -1,5 +1,7 @@
 _ = require('underscore')
 sha1 = require('sha1')
+PauseOnTurnPlayer = require('./PauseOnTurnPlayer.coffee')
+HumanPlayer = require('./HumanPlayer.coffee')
 max = Math.max
 min = Math.min
 
@@ -15,6 +17,7 @@ class Game
 	onTurn: 0
 	timeRemaining = 10
 
+
 	constructor: (@players, @onGameEnd) ->
 		names = _.map(@players, (player) -> player.name)
 		names.sort (a, b) -> a - b
@@ -28,13 +31,13 @@ class Game
 				@board[i][j] = 0
 
 		_.each @players, (p) =>
-			p.onGameLoaded(@onTurn, @mark, @order, @N, @timeRemaining)
+			p.onGameLoaded(@board, @onTurn, @mark, @order, @N, @timeRemaining)
 
-		@timer = setInterval this.timer, 1000
+		@timer = setInterval this.timerTick, 1000
 		@timeRemaining = 10
 
 
-	timer: () =>
+	timerTick: () =>
 		@timeRemaining--
 		if @timeRemaining == 0
 			this.onTurnTimeout()
@@ -45,17 +48,40 @@ class Game
 		@players[newPlayer.name] = newPlayer
 		@order[@order.indexOf(name)] = newPlayer.name
 
-		newPlayer.onGameLoaded(@onTurn, @mark, @order, @N, @timeRemaining)
+		newPlayer.onGameLoaded(@board, @onTurn, @mark, @order, @N, @timeRemaining)
+
+		if @players[@order[@onTurn]] instanceof PauseOnTurnPlayer
+			this.pause()
+
+		if newPlayer instanceof HumanPlayer
+			this.resume()
+
+
+	pause: () ->
+		clearInterval(@timer)
+		@paused = true
+		_.each @players, (p) ->
+			p.onPause()
+
+
+	resume: () =>
+		@onTurn = (@onTurn + 1) % 3
+		@mark = (@mark % 2) + 1 # Maintain XOXOXOXO order
+
+		@timeRemaining = 10
+		@timer = setInterval this.timerTick, 1000
+		@paused = false
+		_.each @players, (p) =>
+			p.onResume(@onTurn, @mark)
 
 
 	turn: (username, x, y) ->
 		if username != @order[@onTurn] \
 				|| @board[x][y] != 0 \
 				|| x < 0 || x >= @N \
-				|| y < 0 || y >= @N
+				|| y < 0 || y >= @N \
+				|| @paused
 			return
-
-		clearTimeout(@timeoutId)
 
 		@board[x][y] = @mark
 		@filledCells++

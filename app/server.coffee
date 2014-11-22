@@ -1,4 +1,3 @@
-_ = require('underscore')
 express = require('express')
 app = express()
 passport = require('passport')
@@ -7,7 +6,6 @@ MemoryStore = session.MemoryStore
 WebSocketServer = require('ws').Server
 redis = require('redis')
 RedisStore = require('connect-redis')(session)
-Game = require('./Game.coffee')
 
 client = redis.createClient()
 
@@ -71,57 +69,13 @@ wss = new WebSocketServer({
 
 })
 
+GameManager = require('./GameManager.coffee')
 HumanPlayer = require('./HumanPlayer.coffee')
-DummyPlayer = require('./DummyPlayer.coffee')
 
-Queue = {}
-Games = {}
+gm = new GameManager(client)
 
-client.del 'user_game:a'
-client.del 'user_game:b'
-client.del 'user_game:c'
-
-onGameEnd = (key, winner) ->
-	players = Games[key].players
-	delete Games[key]
-	for name, player of players
-		player.game = null
-		client.del 'user_game:' + player.name
-		if name != winner && name != 'dummy' && player.connection.readyState == player.connection.OPEN
-			enqueue(player)
-
-
-enqueue = (player) ->
-	# The following code is supposed to be atomic... is it?
-	Queue[player.name] = player
-	if _.size(Queue) < 3
-		_.each(Queue, (player) -> player.onEnqueue(_.size(Queue)))
-	else
-		game = new Game(Queue, onGameEnd)
-		Games[game.key] = game
-		for name, player of Queue
-			player.game = game
-			client.set('user_game:' + player.name, game.key)
-		Queue = {}
-
-
-wss.on('connection', (ws) ->
+wss.on 'connection', (ws) ->
 	sessionFromReq ws.upgradeReq, (s) ->
-		s.passport.game = 'asd'
 		player = new HumanPlayer(s.passport.user, ws)
+		gm.addHumanPlayer(player)
 
-		client.get ('user_game:' + player.name), (err, reply) =>
-			if reply && Games[reply.toString()]?
-				Games[reply.toString()].replacePlayer('dummy', player)
-			else
-				enqueue(player)
-
-
-		ws.on('close', (code, message) ->
-			delete Queue[player.name] if Queue[player.name]?
-			if player.game?
-				dummy = new DummyPlayer
-				dummy.game = player.game
-				player.game.replacePlayer(player.name, dummy)
-		)
-)

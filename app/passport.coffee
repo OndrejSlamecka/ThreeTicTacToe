@@ -14,10 +14,14 @@ module.exports = (passport, passwords) ->
 
 	strategy = new LocalStrategy({ passReqToCallback : true }, # allows us to pass back the entire request to the callback
 		(req, username, password, done) ->
+			# For testing purposes
+			done(null, {name : username})
+			'''
 			if username of passwords and passwords[username] == sha1(password)
 				done(null, {name : username})
 			else
 				done(null, false)
+			'''
 			return
 	)
 

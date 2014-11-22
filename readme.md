@@ -23,5 +23,4 @@ Deploy
 TODO
 ----
 
-* Replace disconnected player with a dummy one (no moves, or random)
 * Persist games (they should survive server restart)

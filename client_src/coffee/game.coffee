@@ -4,15 +4,23 @@ CountdownTimer = require('./CountdownTimer.coffee')
 window.WebSocket = window.WebSocket || window.MozWebSocket
 connection = new window.WebSocket('ws://' + window.location.hostname + ':3010') # host contains port number, we don't want that
 
-markSign = (mark) -> if mark == 1 then 'O' else 'X'
+markSign = (mark) ->
+	if mark == 1
+		return 'O'
+	else if mark == 2
+		return 'X'
+	else
+		return ''
 
+players = null
 username = null
 onTurn = null
 mark = 1
 timer = new CountdownTimer($('#timer'), 10)
+paused = false
 
 onCellClick = (event) ->
-	if onTurn != username
+	if onTurn != username || paused
 		return
 
 	$td = $(this)
@@ -32,20 +40,37 @@ updateOnTurnStatus = (timeRemaining) ->
 handlers = {}
 handlers.identify = (data) -> username = data
 
+handlers.pause = (data) ->
+	paused = true
+	timer.stop()
+	$('#pause').slideDown()
+
+handlers.resume = (data) ->
+	paused = false
+	onTurn = players[data.onTurn]
+	mark = data.mark
+	timer.start()
+	$('#pause').slideUp()
+	updateOnTurnStatus()
+
 handlers.playersInQueue = (data) ->
 	$('#playersInQueue').html(data)
 
 handlers.game = (data) ->
+	$('#pause').hide()
+	$('#tie').slideUp()
+
 	$('#section-lobby').slideUp()
 	$('#section-game').slideDown()
 
-	onTurn = data.players[data.onTurn]
+	players = data.players
+	onTurn = players[data.onTurn]
 
 	code = ''
 	for i in [0..data.boardSize - 1] by 1
 		code += '<tr>'
 		for j in [0..data.boardSize - 1] by 1
-			code += '<td id="cell-' + i + '-' + j + '" data-x="' + i + '" data-y="' + j + '"></td>'
+			code += '<td id="cell-' + i + '-' + j + '" data-x="' + i + '" data-y="' + j + '">' + markSign(data.board[i][j]) + '</td>'
 		code += '</tr>\n'
 	$('#game').html(code)
 	$('td').on 'click', onCellClick
@@ -55,6 +80,7 @@ handlers.game = (data) ->
 handlers.turn = (data) ->
 	onTurn = data.onTurn
 
+	timer.start()
 	if !data.timeout # Player's turn timeouted
 		$('#cell-' + data.x + '-' + data.y).html(markSign(mark))
 

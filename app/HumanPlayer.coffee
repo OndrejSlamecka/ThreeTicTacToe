@@ -18,14 +18,30 @@ class HumanPlayer
 		@connection.send(JSON.stringify({'playersInQueue' : n}))
 
 
-	onGameLoaded: (onTurn, mark, playersNames, boardSize, timeRemaining) ->
+	onGameLoaded: (board, onTurn, mark, playersNames, boardSize, timeRemaining) ->
 		payload = JSON.stringify({
-			'game' : {
+			'game': {
+				'board': board,
 				'onTurn': onTurn,
 				'mark': mark,
 				'players': playersNames,
 				'boardSize': boardSize,
 				'timeRemaining': timeRemaining
+			}
+		})
+		@connection.send(payload)
+
+
+	onPause: () ->
+		payload = JSON.stringify({'pause':true})
+		@connection.send(payload)
+
+
+	onResume: (onTurn, mark) ->
+		payload = JSON.stringify({
+			'resume': {
+				'onTurn': onTurn,
+				'mark': mark
 			}
 		})
 		@connection.send(payload)
