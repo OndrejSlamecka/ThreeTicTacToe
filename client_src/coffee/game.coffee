@@ -8,7 +8,7 @@ markSign = (mark) -> if mark == 1 then 'O' else 'X'
 
 username = null
 onTurn = null
-mark = null
+mark = 1
 timer = new CountdownTimer($('#timer'), 10)
 
 onCellClick = (event) ->
@@ -24,10 +24,10 @@ onCellClick = (event) ->
 	connection.send(payload)
 
 
-updateOnTurnStatus = () ->
-	$('#turn-status').html(if onTurn == username then "You're on turn!" else "It's not your turn")
+updateOnTurnStatus = (timeRemaining) ->
+	$('#turn-status').html(if onTurn == username then "You're on turn!" else "It's not your turn.")
 	$('#turn-mark').html(markSign(mark))
-	timer.start()
+	timer.start(timeRemaining)
 
 handlers = {}
 handlers.identify = (data) -> username = data
@@ -39,19 +39,18 @@ handlers.game = (data) ->
 	$('#section-lobby').slideUp()
 	$('#section-game').slideDown()
 
-	onTurn = data.onTurn
-	mark = data.mark
+	onTurn = data.players[data.onTurn]
 
 	code = ''
-	for i in [0..data.boardSize] by 1
+	for i in [0..data.boardSize - 1] by 1
 		code += '<tr>'
-		for j in [0..data.boardSize] by 1
+		for j in [0..data.boardSize - 1] by 1
 			code += '<td id="cell-' + i + '-' + j + '" data-x="' + i + '" data-y="' + j + '"></td>'
 		code += '</tr>\n'
 	$('#game').html(code)
 	$('td').on 'click', onCellClick
 
-	updateOnTurnStatus()
+	updateOnTurnStatus(data.timeRemaining)
 
 handlers.turn = (data) ->
 	onTurn = data.onTurn
@@ -64,12 +63,20 @@ handlers.turn = (data) ->
 	updateOnTurnStatus()
 
 handlers.victory = (data) ->
+	$('#tie').slideUp()
 	$('#cell-' + data.x + '-' + data.y).html(markSign(mark))
 	$('#password').html(data.password)
 	$('#victory').slideDown()
 
 handlers.loss = () ->
+	$('#tie').slideUp() # May have been shown from before
 	$('#loss').show()
+	$('#section-lobby').slideDown()
+	$('#section-game').slideUp()
+
+handlers.tie = () ->
+	$('#loss').slideUp() # May have been shown from before
+	$('#tie').show()
 	$('#section-lobby').slideDown()
 	$('#section-game').slideUp()
 

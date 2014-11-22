@@ -5,9 +5,11 @@ passport = require('passport')
 session = require('express-session')
 MemoryStore = session.MemoryStore
 WebSocketServer = require('ws').Server
-sha1 = require('sha1')
+redis = require('redis')
 RedisStore = require('connect-redis')(session)
 Game = require('./Game.coffee')
+
+client = redis.createClient()
 
 store = new RedisStore
 	host:'127.0.0.1',
@@ -69,57 +71,57 @@ wss = new WebSocketServer({
 
 })
 
-gameKey = (playersNames) ->
-	playersNames.sort (a, b) -> a - b
-	return sha1(playersNames.join('_'))
+HumanPlayer = require('./HumanPlayer.coffee')
+DummyPlayer = require('./DummyPlayer.coffee')
 
 Queue = {}
 Games = {}
-UsersGames = {}
 
-onGameEnd = (key) ->
-	f = (winner) ->
-		for name, conn of Games[key].players
-			delete UsersGames[name]
-			if name != winner
-				enqueue(name, conn)
+client.del 'user_game:a'
+client.del 'user_game:b'
+client.del 'user_game:c'
 
-		delete Games[key]
-	return f
+onGameEnd = (key, winner) ->
+	players = Games[key].players
+	delete Games[key]
+	for name, player of players
+		player.game = null
+		client.del 'user_game:' + player.name
+		if name != winner && name != 'dummy' && player.connection.readyState == player.connection.OPEN
+			enqueue(player)
 
-enqueue = (username, ws) ->
+
+enqueue = (player) ->
 	# The following code is supposed to be atomic... is it?
-	Queue[username] = ws
+	Queue[player.name] = player
 	if _.size(Queue) < 3
-		_.each Queue, (conn) ->
-			conn.send(JSON.stringify({'playersInQueue' : _.size(Queue)}))
+		_.each(Queue, (player) -> player.onEnqueue(_.size(Queue)))
 	else
-		playersNames = _.keys(Queue)
-		key = gameKey(playersNames)
-		Games[key] = new Game(Queue, onGameEnd(key))
+		game = new Game(Queue, onGameEnd)
+		Games[game.key] = game
+		for name, player of Queue
+			player.game = game
+			client.set('user_game:' + player.name, game.key)
 		Queue = {}
-
-		for name in playersNames
-			UsersGames[name] = key
 
 
 wss.on('connection', (ws) ->
 	sessionFromReq ws.upgradeReq, (s) ->
-		username = s.passport.user
-		ws.send(JSON.stringify({'identify':username}))
+		s.passport.game = 'asd'
+		player = new HumanPlayer(s.passport.user, ws)
 
-		enqueue(username, ws)
+		client.get ('user_game:' + player.name), (err, reply) =>
+			if reply && Games[reply.toString()]?
+				Games[reply.toString()].replacePlayer('dummy', player)
+			else
+				enqueue(player)
 
-		ws.on('message', (data) ->
-			payload = JSON.parse(data)
-
-			if 'turn' of payload
-				turn = payload.turn
-				if UsersGames[username]? # user may be clicking a dead game
-					Games[UsersGames[username]].turn(username, turn.x, turn.y)
-		)
 
 		ws.on('close', (code, message) ->
-			# Games[UsersGames[username]].replaceWithDummy(username)
+			delete Queue[player.name] if Queue[player.name]?
+			if player.game?
+				dummy = new DummyPlayer
+				dummy.game = player.game
+				player.game.replacePlayer(player.name, dummy)
 		)
 )

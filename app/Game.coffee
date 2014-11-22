@@ -1,89 +1,99 @@
 _ = require('underscore')
+sha1 = require('sha1')
 max = Math.max
 min = Math.min
 
 class Game
 	board: []
-	N: 20
-	mark: 1 # 1 for O, 2 for X
+	N: 5
+	consecutiveMarksToWin: 3
+
+	# players
+	# onGameEnd
+	filledCells: 0
+	mark: 1 # 1 for O, 2 for X (and 0 for empty)
 	onTurn: 0
+	timeRemaining = 10
 
 	constructor: (@players, @onGameEnd) ->
+		names = _.map(@players, (player) -> player.name)
+		names.sort (a, b) -> a - b
+		@key = sha1(names.join('_'))
+
+		@order = _.keys(@players)
+
 		for i in [0..@N] by 1
 			@board[i] = []
 			for j in [0..@N] by 1
 				@board[i][j] = 0
 
-		playerList = {}
-		i = 0
-		for key of @players
-			playerList[i++] = key
+		_.each @players, (p) =>
+			p.onGameLoaded(@onTurn, @mark, @order, @N, @timeRemaining)
 
-		payload = JSON.stringify({
-			'game' : {
-				'onTurn' : _.keys(@players)[@onTurn],
-				'mark': @mark,
-				'players': playerList,
-				'boardSize' : @N
-			}
-		})
+		@timer = setInterval this.timer, 1000
+		@timeRemaining = 10
 
-		@timeoutId = setTimeout this.onTurnTimeout, 10*1000 # duplicate from turn method...
 
-		this.broadcast(payload)
+	timer: () =>
+		@timeRemaining--
+		if @timeRemaining == 0
+			this.onTurnTimeout()
+
+
+	replacePlayer: (name, newPlayer) ->
+		delete @players[name]
+		@players[newPlayer.name] = newPlayer
+		@order[@order.indexOf(name)] = newPlayer.name
+
+		newPlayer.onGameLoaded(@onTurn, @mark, @order, @N, @timeRemaining)
+
 
 	turn: (username, x, y) ->
-		if username != _.keys(@players)[@onTurn] || @board[x][y] != 0
+		if username != @order[@onTurn] \
+				|| @board[x][y] != 0 \
+				|| x < 0 || x >= @N \
+				|| y < 0 || y >= @N
 			return
 
 		clearTimeout(@timeoutId)
 
 		@board[x][y] = @mark
+		@filledCells++
 
 		if this.isVictory(x, y)
-			payload = JSON.stringify({'victory': {'password': 'heslo je rum', 'x': x, 'y': y}})
-			@players[username].send(payload)
+			@players[username].onVictory('rum', x,y)
 
-			payload = JSON.stringify({'loss': true})
-			for name, conn of @players
-				if name != username
-					conn.send(payload)
+			_.each @players, (p) ->
+				p.onLoss() if p.name != username
 
-			@onGameEnd(username)
+			clearInterval(@timer)
+			@onGameEnd(@key, username)
 
-		else if this.isBoardFull()
-			payload = JSON.stringify({'tie': true})
-			this.broadcast(payload)
-			@onGameEnd(null)
+		else if @filledCells == @N*@N
+			_.each @players, (p) -> p.onTie()
+			clearInterval(@timer)
+			@onGameEnd(@key, null)
 		else
 			@onTurn = (@onTurn + 1) % 3
-
-			payload = JSON.stringify('turn': { 'timeout': false, 'x': x, 'y': y, 'mark': @mark, 'onTurn': _.keys(@players)[@onTurn] })
-			this.broadcast(payload)
-
+			_.each @players, (p) => p.onTurn(x, y, @mark, @order[@onTurn])
 			@mark = (@mark % 2) + 1
+			@timeRemaining = 10
 
-			@timeoutId = setTimeout this.onTurnTimeout, 10*1000
 
 	onTurnTimeout: () =>
 		@onTurn = (@onTurn + 1) % 3
-
 		@mark = (@mark % 2) + 1 # Maintain XOXOXOXO order
-
-		payload = JSON.stringify('turn': { 'timeout': true, 'mark': @mark, 'onTurn': _.keys(@players)[@onTurn] })
-		this.broadcast(payload)
-
+		_.each @players, (p) => p.onTurnTimeout(@mark, @order[@onTurn])
 		@mark = (@mark % 2) + 1
-
-		@timeoutId = setTimeout this.onTurnTimeout, 10*1000
+		@timeRemaining = 10
 
 
 	isVictory: (x, y) ->
-		seqLen = 3
+		seqLen = @consecutiveMarksToWin
 
 		# Horizontal
 		consec = 0
-		for i in [max(y-seqLen, 0) .. min(y+seqLen, @N)] by 1
+		for i in [max(y-seqLen, 0) .. min(y+seqLen, @N - 1)] by 1
 			if @board[x][i] == @board[x][y]
 				consec++
 				return true if consec >= seqLen
@@ -92,7 +102,7 @@ class Game
 
 		# Vertical
 		consec = 0
-		for i in [max(x-seqLen, 0) .. min(x+seqLen, @N)] by 1
+		for i in [max(x-seqLen, 0) .. min(x+seqLen, @N - 1)] by 1
 			if @board[i][y] == @board[x][y]
 				consec++
 				return true if consec >= seqLen
@@ -101,8 +111,8 @@ class Game
 
 		# / Diagonal
 		consec = 0
-		for i in [max(x-seqLen, 0) .. min(x+seqLen, @N)] by 1
-			for j in [max(y-seqLen, 0) .. min(y+seqLen, @N)] by 1
+		for i in [max(x-seqLen, 0) .. min(x+seqLen, @N - 1)] by 1
+			for j in [max(y-seqLen, 0) .. min(y+seqLen, @N - 1)] by 1
 				if x + y == i + j
 					if @board[i][j] == @board[x][y]
 						consec++
@@ -112,8 +122,8 @@ class Game
 
 		# \ Diagonal
 		consec = 0
-		for i in [max(x-seqLen, 0) .. min(x+seqLen, @N)] by 1
-			for j in [max(y-seqLen, 0) .. min(y+seqLen, @N)] by 1
+		for i in [max(x-seqLen, 0) .. min(x+seqLen, @N - 1)] by 1
+			for j in [max(y-seqLen, 0) .. min(y+seqLen, @N - 1)] by 1
 				if x - y == i - j
 					if @board[i][j] == @board[x][y]
 						consec++
@@ -123,7 +133,5 @@ class Game
 
 		return false
 
-	broadcast: (payload) ->
-		_.each @players, (conn) -> conn.send payload
 
 module.exports = Game
