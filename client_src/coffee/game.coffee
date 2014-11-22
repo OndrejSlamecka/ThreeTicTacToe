@@ -12,6 +12,7 @@ markSign = (mark) ->
 	else
 		return ''
 
+gameLoaded = false
 players = null
 username = null
 onTurn = null
@@ -46,8 +47,12 @@ handlers.pause = (data) ->
 	$('#pause').slideDown()
 
 handlers.resume = (data) ->
+	if !gameLoaded
+		return
+
 	paused = false
 	onTurn = players[data.onTurn]
+	console.log onTurn
 	mark = data.mark
 	timer.start()
 	$('#pause').slideUp()
@@ -57,6 +62,7 @@ handlers.playersInQueue = (data) ->
 	$('#playersInQueue').html(data)
 
 handlers.game = (data) ->
+	gameLoaded = true
 	$('#pause').hide()
 	$('#tie').slideUp()
 
@@ -65,6 +71,7 @@ handlers.game = (data) ->
 
 	players = data.players
 	onTurn = players[data.onTurn]
+	mark = data.mark
 
 	code = ''
 	for i in [0..data.boardSize - 1] by 1
@@ -77,6 +84,9 @@ handlers.game = (data) ->
 
 	updateOnTurnStatus(data.timeRemaining)
 
+	if data.paused? && data.paused
+		handlers.pause()
+
 handlers.turn = (data) ->
 	onTurn = data.onTurn
 
@@ -85,7 +95,6 @@ handlers.turn = (data) ->
 		$('#cell-' + data.x + '-' + data.y).html(markSign(mark))
 
 	mark = (data.mark % 2) + 1
-
 	updateOnTurnStatus()
 
 handlers.victory = (data) ->

@@ -31,7 +31,7 @@ class Game
 				@board[i][j] = 0
 
 		_.each @players, (p) =>
-			p.onGameLoaded(@board, @onTurn, @mark, @order, @N, @timeRemaining)
+			p.onGameLoaded(@board, @onTurn, @mark, @order, @N, @timeRemaining, @paused)
 
 		@timer = setInterval this.timerTick, 1000
 		@timeRemaining = 10
@@ -45,16 +45,24 @@ class Game
 
 	replacePlayer: (name, newPlayer) ->
 		delete @players[name]
+		newPlayer.game = this
 		@players[newPlayer.name] = newPlayer
 		@order[@order.indexOf(name)] = newPlayer.name
 
-		newPlayer.onGameLoaded(@board, @onTurn, @mark, @order, @N, @timeRemaining)
-
-		if @players[@order[@onTurn]] instanceof PauseOnTurnPlayer
+		if not(newPlayer instanceof HumanPlayer) && !@paused
 			this.pause()
 
-		if newPlayer instanceof HumanPlayer
+		allHumans = true
+		for name, player of @players
+			if not (player instanceof HumanPlayer)
+				allHumans = false
+				break
+
+		if allHumans
+			@onTurn = (@order.indexOf(newPlayer.name) + 1) % 3 # The next player in order is on turn
 			this.resume()
+
+		newPlayer.onGameLoaded(@board, @onTurn, @mark, @order, @N, @timeRemaining, @paused)
 
 
 	pause: () ->
@@ -65,10 +73,8 @@ class Game
 
 
 	resume: () =>
-		@onTurn = (@onTurn + 1) % 3
-		@mark = (@mark % 2) + 1 # Maintain XOXOXOXO order
-
 		@timeRemaining = 10
+		clearInterval(@timer)
 		@timer = setInterval this.timerTick, 1000
 		@paused = false
 		_.each @players, (p) =>
@@ -108,6 +114,7 @@ class Game
 
 	onTurnTimeout: () =>
 		@onTurn = (@onTurn + 1) % 3
+
 		@mark = (@mark % 2) + 1 # Maintain XOXOXOXO order
 		_.each @players, (p) => p.onTurnTimeout(@mark, @order[@onTurn])
 		@mark = (@mark % 2) + 1

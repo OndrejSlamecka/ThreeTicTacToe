@@ -8,7 +8,7 @@ class PauseOnTurnPlayer
 		return
 
 	onTurn: (x, y, mark, onTurn) ->
-		if onTurn != 'pauseOnTurn'
+		if onTurn != @name
 			return
 
 		@game.pause()
@@ -20,7 +20,7 @@ class PauseOnTurnPlayer
 		return
 
 	onTurnTimeout: (mark, onTurn) ->
-		if onTurn != 'pauseOnTurn'
+		if onTurn != @name
 			return
 
 		@game.pause()

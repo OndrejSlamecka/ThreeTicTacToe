@@ -15,7 +15,7 @@ class GameManager
 		for name, player of players
 			player.game = null
 			@db.del 'user_game:' + player.name
-			if name != winner && name != 'dummy' && player.connection.readyState == player.connection.OPEN
+			if name != winner && player instanceof HumanPlayer && player.connection.readyState == player.connection.OPEN
 				this.enqueue(player)
 
 
@@ -39,7 +39,6 @@ class GameManager
 				@games[reply.toString()].replacePlayer('substitute_' + player.name, player)
 			else
 				this.enqueue(player)
-
 
 		player.connection.on 'close', (code, message) =>
 			delete @queue[player.name] if @queue[player.name]?
