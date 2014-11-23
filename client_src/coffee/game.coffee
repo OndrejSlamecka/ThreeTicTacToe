@@ -19,6 +19,8 @@ connect = () ->
 
 	connection.onclose = (close) ->
 		$('.disconnected-warning').show()
+		$('#section-lobby').slideDown()
+		$('#section-game').slideUp()
 		setTimeout connect, 1000
 
 connect()
@@ -85,7 +87,6 @@ handlers.resume = (data) ->
 
 	paused = false
 	onTurn = players[data.onTurn]
-	console.log onTurn
 	mark = data.mark
 	timer.start()
 	$('#pause').slideUp()
