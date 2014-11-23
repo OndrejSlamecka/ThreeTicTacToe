@@ -25,3 +25,4 @@ TODO
 ----
 
 * Persist games (they should survive server restart)
+* Limit username length (DoS with 1 MB long usernames would soon deplete server memory)

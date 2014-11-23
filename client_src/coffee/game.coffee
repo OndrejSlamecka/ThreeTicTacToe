@@ -3,6 +3,7 @@ CountdownTimer = require('./CountdownTimer.coffee')
 
 window.WebSocket = window.WebSocket || window.MozWebSocket
 
+connection = null
 connect = () ->
 	connection = new window.WebSocket('ws://' + window.location.hostname + ':3010') # host contains port number, we don't want that
 
