@@ -18,7 +18,7 @@ class HumanPlayer
 
 
 	onEnqueue: (n) ->
-		@connection.send(JSON.stringify({'playersInQueue' : n}))
+		return
 
 
 	onGameLoaded: (board, onTurn, mark, playersNames, boardSize, timeRemaining, paused) ->
@@ -52,7 +52,12 @@ class HumanPlayer
 
 
 	onVictory: (password, x,y) ->
-		payload = JSON.stringify({'victory': {'password': password, 'x': x, 'y': y}})
+		payload = JSON.stringify({
+			'victory': {
+				'password': password, 'x': x, 'y': y,
+				'gameExplanation': 'Hrál jsi s dvěma soutěžícíma.'
+			}
+		})
 		@connection.send(payload)
 
 

@@ -105,9 +105,6 @@ handlers.resume = (data) ->
 
 	updateOnTurnStatus()
 
-handlers.playersInQueue = (data) ->
-	$('#playersInQueue').html(data)
-
 handlers.game = (data) ->
 	gameLoaded = true
 	$('#pause').hide()
@@ -149,6 +146,7 @@ handlers.turn = (data) ->
 handlers.victory = (data) ->
 	$('#cell-' + data.x + '-' + data.y).html(markSign(mark))
 	$('#password').html(data.password)
+	$('#game-explanation').html(data.gameExplanation)
 	$('#victory').slideDown()
 
 handlers.loss = () ->
