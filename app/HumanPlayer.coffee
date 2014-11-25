@@ -55,7 +55,7 @@ class HumanPlayer
 		payload = JSON.stringify({
 			'victory': {
 				'password': password, 'x': x, 'y': y,
-				'gameExplanation': 'Hrál jsi s dvěma soutěžícíma.'
+				'gameExplanation': 'Hrál jsi s dvěma soutěžícími.'
 			}
 		})
 		@connection.send(payload)
