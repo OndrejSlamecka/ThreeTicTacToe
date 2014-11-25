@@ -7,8 +7,8 @@ min = Math.min
 
 class Game
 	board: []
-	N: 5
-	consecutiveMarksToWin: 3
+	N: 20
+	consecutiveMarksToWin: 5
 
 	# players
 	# onGameEnd
