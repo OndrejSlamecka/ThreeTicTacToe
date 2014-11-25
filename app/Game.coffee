@@ -129,7 +129,7 @@ class Game
 	onTurnTimeout: () =>
 		@onTurn = (@onTurn + 1) % 3
 
-		@mark = (@mark % 2) + 1 # Maintain XOXOXOXO order
+		#@mark = (@mark % 2) + 1 # Maintain XOXOXOXO order
 		_.each @players, (p) => p.onTurnTimeout(@mark, @order[@onTurn])
 		@mark = (@mark % 2) + 1
 		@timeRemaining = 10
