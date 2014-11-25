@@ -66,11 +66,11 @@ onCellClick = (event) ->
 updateOnTurnStatus = (timeRemaining) ->
 	$ts = $('#turn-status')
 	if onTurn == username
-		$ts.html("You're on turn!")
+		$ts.html("Jsi na tahu!")
 		$ts.removeClass('label-default')
 		$ts.addClass('label-success')
 	else
-		$ts.html("It's not your turn.")
+		$ts.html("Nejsi na tahu.")
 		$ts.removeClass('label-success')
 		$ts.addClass('label-default')
 
