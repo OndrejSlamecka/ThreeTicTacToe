@@ -64,7 +64,16 @@ onCellClick = (event) ->
 
 
 updateOnTurnStatus = (timeRemaining) ->
-	$('#turn-status').html(if onTurn == username then "You're on turn!" else "It's not your turn.")
+	$ts = $('#turn-status')
+	if onTurn == username
+		$ts.html("You're on turn!")
+		$ts.removeClass('label-default')
+		$ts.addClass('label-success')
+	else
+		$ts.html("It's not your turn.")
+		$ts.removeClass('label-success')
+		$ts.addClass('label-default')
+
 	$('#turn-mark').html(markSign(mark))
 	timer.start(timeRemaining)
 
