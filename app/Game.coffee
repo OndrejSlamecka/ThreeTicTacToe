@@ -7,7 +7,8 @@ min = Math.min
 
 class Game
 	board: []
-	N: 20
+	boardWidth: 30
+	boardHeight: 15
 	consecutiveMarksToWin: 5
 
 	# players
@@ -25,13 +26,13 @@ class Game
 
 		@order = _.keys(@players)
 
-		for i in [0..@N] by 1
+		for i in [0..@boardHeight] by 1
 			@board[i] = []
-			for j in [0..@N] by 1
+			for j in [0..@boardHeight] by 1
 				@board[i][j] = 0
 
 		_.each @players, (p) =>
-			p.onGameLoaded(@board, @onTurn, @mark, @order, @N, @timeRemaining, @paused)
+			p.onGameLoaded(@board, @onTurn, @mark, @order, @boardHeight, @boardWidth, @timeRemaining, @paused)
 
 		@timer = setInterval this.timerTick, 1000
 		@timeRemaining = 10
@@ -62,7 +63,7 @@ class Game
 			@onTurn = (@order.indexOf(newPlayer.name) + 1) % 3 # The next player in order is on turn
 			this.resume()
 
-		newPlayer.onGameLoaded(@board, @onTurn, @mark, @order, @N, @timeRemaining, @paused)
+		newPlayer.onGameLoaded(@board, @onTurn, @mark, @order, @boardHeight, @boardWidth, @timeRemaining, @paused)
 
 
 	pause: () ->
@@ -100,8 +101,8 @@ class Game
 	turn: (username, x, y) ->
 		if username != @order[@onTurn] \
 				|| @board[x][y] != 0 \
-				|| x < 0 || x >= @N \
-				|| y < 0 || y >= @N \
+				|| x < 0 || x >= @boardHeight \
+				|| y < 0 || y >= @boardWidth \
 				|| @paused
 			return
 
@@ -140,7 +141,7 @@ class Game
 
 		# Horizontal
 		consec = 0
-		for i in [max(y-seqLen, 0) .. min(y+seqLen, @N - 1)] by 1
+		for i in [max(y-seqLen, 0) .. min(y+seqLen, @boardWidth - 1)] by 1
 			if @board[x][i] == @board[x][y]
 				consec++
 				return true if consec >= seqLen
@@ -149,7 +150,7 @@ class Game
 
 		# Vertical
 		consec = 0
-		for i in [max(x-seqLen, 0) .. min(x+seqLen, @N - 1)] by 1
+		for i in [max(x-seqLen, 0) .. min(x+seqLen, @boardHeight - 1)] by 1
 			if @board[i][y] == @board[x][y]
 				consec++
 				return true if consec >= seqLen
@@ -158,8 +159,8 @@ class Game
 
 		# / Diagonal
 		consec = 0
-		for i in [max(x-seqLen, 0) .. min(x+seqLen, @N - 1)] by 1
-			for j in [max(y-seqLen, 0) .. min(y+seqLen, @N - 1)] by 1
+		for i in [max(x-seqLen, 0) .. min(x+seqLen, @boardHeight - 1)] by 1
+			for j in [max(y-seqLen, 0) .. min(y+seqLen, @boardWidth - 1)] by 1
 				if x + y == i + j
 					if @board[i][j] == @board[x][y]
 						consec++
@@ -169,8 +170,8 @@ class Game
 
 		# \ Diagonal
 		consec = 0
-		for i in [max(x-seqLen, 0) .. min(x+seqLen, @N - 1)] by 1
-			for j in [max(y-seqLen, 0) .. min(y+seqLen, @N - 1)] by 1
+		for i in [max(x-seqLen, 0) .. min(x+seqLen, @boardHeight - 1)] by 1
+			for j in [max(y-seqLen, 0) .. min(y+seqLen, @boardWidth - 1)] by 1
 				if x - y == i - j
 					if @board[i][j] == @board[x][y]
 						consec++

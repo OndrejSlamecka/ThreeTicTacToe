@@ -21,14 +21,15 @@ class HumanPlayer
 		return
 
 
-	onGameLoaded: (board, onTurn, mark, playersNames, boardSize, timeRemaining, paused) ->
+	onGameLoaded: (board, onTurn, mark, playersNames, boardHeight, boardWidth, timeRemaining, paused) ->
 		payload = JSON.stringify({
 			'game': {
 				'board': board,
 				'onTurn': onTurn,
 				'mark': mark,
 				'players': playersNames,
-				'boardSize': boardSize,
+				'boardHeight': boardHeight,
+				'boardWidth': boardWidth,
 				'timeRemaining': timeRemaining,
 				'paused': paused
 			}

@@ -120,9 +120,9 @@ handlers.game = (data) ->
 	mark = data.mark
 
 	code = ''
-	for i in [0..data.boardSize - 1] by 1
+	for i in [0..data.boardHeight - 1] by 1
 		code += '<tr>'
-		for j in [0..data.boardSize - 1] by 1
+		for j in [0..data.boardWidth - 1] by 1
 			code += '<td id="cell-' + i + '-' + j + '" data-x="' + i + '" data-y="' + j + '">' + markSign(data.board[i][j]) + '</td>'
 		code += '</tr>\n'
 	$('#game').html(code)
