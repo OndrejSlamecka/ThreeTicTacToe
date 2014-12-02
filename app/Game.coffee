@@ -2,6 +2,7 @@ _ = require('underscore')
 sha1 = require('sha1')
 PauseOnTurnPlayer = require('./PauseOnTurnPlayer.coffee')
 HumanPlayer = require('./HumanPlayer.coffee')
+victoryPassword = require('./config/victory-pass.js')
 max = Math.max
 min = Math.min
 
@@ -11,8 +12,6 @@ class Game
 	boardHeight: 15
 	consecutiveMarksToWin: 5
 
-	# players
-	# onGameEnd
 	filledCells: 0
 	mark: 1 # 1 for O, 2 for X (and 0 for empty)
 	onTurn: 0
@@ -32,7 +31,7 @@ class Game
 				@board[i][j] = 0
 
 		_.each @players, (p) =>
-			p.onGameLoaded(@board, @onTurn, @mark, @order, @boardHeight, @boardWidth, @timeRemaining, @paused)
+			p.onGameLoaded(this.getGameInfo())
 
 		@timer = setInterval this.timerTick, 1000
 		@timeRemaining = 10
@@ -63,7 +62,20 @@ class Game
 			@onTurn = (@order.indexOf(newPlayer.name) + 1) % 3 # The next player in order is on turn
 			this.resume()
 
-		newPlayer.onGameLoaded(@board, @onTurn, @mark, @order, @boardHeight, @boardWidth, @timeRemaining, @paused)
+		newPlayer.onGameLoaded(this.getGameInfo())
+
+
+	getGameInfo: () ->
+		return {
+			'board': @board,
+			'onTurn': @onTurn,
+			'mark': @mark,
+			'players': @order,
+			'boardHeight': @boardHeight,
+			'boardWidth': @boardWidth,
+			'timeRemaining': @timeRemaining,
+			'paused': @paused
+		}
 
 
 	pause: () ->
@@ -110,7 +122,7 @@ class Game
 		@filledCells++
 
 		if this.isVictory(x, y)
-			@players[username].onVictory('rum', x,y)
+			@players[username].onVictory(victoryPassword, x,y)
 
 			_.each @players, (p) ->
 				p.onLoss() if p.name != username
@@ -129,8 +141,6 @@ class Game
 
 	onTurnTimeout: () =>
 		@onTurn = (@onTurn + 1) % 3
-
-		#@mark = (@mark % 2) + 1 # Maintain XOXOXOXO order
 		_.each @players, (p) => p.onTurnTimeout(@mark, @order[@onTurn])
 		@mark = (@mark % 2) + 1
 		@timeRemaining = 10

@@ -20,6 +20,13 @@ logger = require('morgan')
 cookieParser = require('cookie-parser')('mytinylittlesecreteis:')
 bodyParser = require('body-parser')
 
+# Game setup
+GameManager = require('./GameManager.coffee')
+HumanPlayer = require('./HumanPlayer.coffee')
+
+gm = new GameManager(client)
+
+# HTTP server
 passwords = require('./config/passwords.js')
 require('./passport.coffee')(passport, passwords)
 
@@ -42,7 +49,7 @@ app.use(passport.session())
 app.set('views', path.join(__dirname, '../views'))
 app.set('view engine', 'hbs')
 
-require('./routes.coffee')(app, passport)
+require('./routes.coffee')(app, passport, gm)
 require('./errorHandler.coffee')(app)
 
 server = app.listen(3000, ->
@@ -68,11 +75,6 @@ wss = new WebSocketServer({
 				cb(false, 401, 'Could not authenticate')
 
 })
-
-GameManager = require('./GameManager.coffee')
-HumanPlayer = require('./HumanPlayer.coffee')
-
-gm = new GameManager(client)
 
 wss.on 'connection', (ws) ->
 	sessionFromReq ws.upgradeReq, (s) ->

@@ -21,19 +21,8 @@ class HumanPlayer
 		return
 
 
-	onGameLoaded: (board, onTurn, mark, playersNames, boardHeight, boardWidth, timeRemaining, paused) ->
-		payload = JSON.stringify({
-			'game': {
-				'board': board,
-				'onTurn': onTurn,
-				'mark': mark,
-				'players': playersNames,
-				'boardHeight': boardHeight,
-				'boardWidth': boardWidth,
-				'timeRemaining': timeRemaining,
-				'paused': paused
-			}
-		})
+	onGameLoaded: (gameInfo) ->
+		payload = JSON.stringify({ 'game': gameInfo })
 		@connection.send(payload)
 
 

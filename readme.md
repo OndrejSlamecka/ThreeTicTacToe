@@ -21,6 +21,11 @@ Deploy
 	$ forever -c coffee [start|stop|restart] app/server.coffee
 
 
+Watch
+-----
+
+	http://ttt.slamecka.cz/queueStatus
+
 TODO
 ----
 

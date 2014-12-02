@@ -1,4 +1,4 @@
-module.exports = (app, passport) ->
+module.exports = (app, passport, gameManager) ->
 
 	isLoggedIn = (req, res, next) ->
 		if (req.isAuthenticated())
@@ -17,6 +17,12 @@ module.exports = (app, passport) ->
 		req.logout()
 		res.redirect('/')
 		return
+
+	app.get '/queueStatus', (req, res) ->
+		res.render('queueStatus', { queue: {
+			size: gameManager.getQueueSize(),
+			lastGameCreated: gameManager.getLastGameCreation()
+		}})
 
 	app.get '/', isLoggedIn, (req, res) ->
 		res.render('index')

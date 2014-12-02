@@ -6,6 +6,7 @@ PauseOnTurnPlayer = require('./PauseOnTurnPlayer.coffee')
 class GameManager
 	queue: {}
 	games: {}
+	lastGameCreated: null
 
 	constructor: (@db) ->
 
@@ -32,6 +33,7 @@ class GameManager
 				player.game = game
 				@db.set('user_game:' + player.name, game.key)
 			@queue = {}
+			@lastGameCreated = new Date()
 
 
 	addHumanPlayer: (player) ->
@@ -48,6 +50,9 @@ class GameManager
 				dummy.game = player.game
 				player.game.replacePlayer(player.name, dummy)
 
+
+	getLastGameCreation: () -> @lastGameCreated
+	getQueueSize: () -> _.size(@queue)
 
 
 module.exports = GameManager
