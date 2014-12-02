@@ -28,7 +28,7 @@ class Game
 
 		for i in [0..@boardHeight] by 1
 			@board[i] = []
-			for j in [0..@boardHeight] by 1
+			for j in [0..@boardWidth] by 1
 				@board[i][j] = 0
 
 		_.each @players, (p) =>
