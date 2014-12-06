@@ -27,6 +27,7 @@ class GameManager
 		else
 			game = new Game(@queue, this.onGameEnd)
 			@games[game.key] = game
+			console.log 'Created game ' + game.key
 			for name, player of @queue
 				player.game = game
 				@playersGames[player.name] = game.key
@@ -36,6 +37,7 @@ class GameManager
 
 	addHumanPlayer: (player) ->
 		if @playersGames[player.name]?
+			console.log player.name + ' reconnected to ' + @playersGames[player.name] + ' ' + @games[@playersGames[player.name]].board[0][0]
 			@games[@playersGames[player.name]].replacePlayer('substitute_' + player.name, player)
 		else
 			this.enqueue(player)

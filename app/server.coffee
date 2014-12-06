@@ -27,7 +27,7 @@ gm = new GameManager()
 passwords = require('./config/passwords.js')
 require('./passport.coffee')(passport, passwords)
 
-app.use(logger('dev'))
+#app.use(logger('dev'))
 app.use(express.static(path.join(__dirname, '../public')))
 app.use(cookieParser)
 app.use(bodyParser.urlencoded({ extended: false }))

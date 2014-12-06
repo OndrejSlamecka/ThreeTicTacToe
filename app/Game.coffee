@@ -1,5 +1,4 @@
 _ = require('underscore')
-sha1 = require('sha1')
 PauseOnTurnPlayer = require('./PauseOnTurnPlayer.coffee')
 HumanPlayer = require('./HumanPlayer.coffee')
 victoryPassword = require('./config/victory-pass.js')
@@ -7,21 +6,21 @@ max = Math.max
 min = Math.min
 
 class Game
-	board: []
 	boardWidth: 30
 	boardHeight: 15
 	consecutiveMarksToWin: 5
 
-	filledCells: 0
-	mark: 1 # 1 for O, 2 for X (and 0 for empty)
-	onTurn: 0
-	timeRemaining = 10
-
 
 	constructor: (@players, @onGameEnd) ->
+		@onTurn = 0
+		@board = []
+		@filledCells = 0
+		@mark = 1 # 1 for O, 2 for X (and 0 for empty)
+		@timeRemaining = 10
+
 		names = _.map(@players, (player) -> player.name)
-		names.sort (a, b) -> a - b
-		@key = sha1(names.join('_'))
+		names.sort()
+		@key = names.join('_')
 
 		@order = _.keys(@players)
 
@@ -117,6 +116,8 @@ class Game
 				|| y < 0 || y >= @boardWidth \
 				|| @paused
 			return
+
+		console.log username + ' played in game ' + this.key
 
 		@board[x][y] = @mark
 		@filledCells++

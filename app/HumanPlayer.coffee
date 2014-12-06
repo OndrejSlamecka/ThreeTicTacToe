@@ -11,6 +11,7 @@ class HumanPlayer
 
 		if 'turn' of payload
 			turn = payload.turn
+			console.log 'turn by ' + @name + ' in ' + @game.key
 			@game.turn(@name, turn.x, turn.y) if @game?
 
 		if 'leaveAndJoinQueue' of payload
