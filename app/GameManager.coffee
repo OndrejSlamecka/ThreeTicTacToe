@@ -6,17 +6,15 @@ PauseOnTurnPlayer = require('./PauseOnTurnPlayer.coffee')
 class GameManager
 	queue: {}
 	games: {}
+	playersGames: {}
 	lastGameCreated: null
-
-	constructor: (@db) ->
-
 
 	onGameEnd: (key, winner) =>
 		players = @games[key].players
 		delete @games[key]
 		for name, player of players
 			player.game = null
-			@db.del 'user_game:' + player.name
+			delete @playersGames[player.name]
 			if name != winner && player instanceof HumanPlayer && player.connection.readyState == player.connection.OPEN
 				this.enqueue(player)
 
@@ -31,17 +29,16 @@ class GameManager
 			@games[game.key] = game
 			for name, player of @queue
 				player.game = game
-				@db.set('user_game:' + player.name, game.key)
+				@playersGames[player.name] = game.key
 			@queue = {}
 			@lastGameCreated = new Date()
 
 
 	addHumanPlayer: (player) ->
-		@db.get ('user_game:' + player.name), (err, reply) =>
-			if reply && @games[reply.toString()]?
-				@games[reply.toString()].replacePlayer('substitute_' + player.name, player)
-			else
-				this.enqueue(player)
+		if @playersGames[player.name]?
+			@games[@playersGames[player.name]].replacePlayer('substitute_' + player.name, player)
+		else
+			this.enqueue(player)
 
 		player.connection.on 'close', (code, message) =>
 			delete @queue[player.name] if @queue[player.name]?

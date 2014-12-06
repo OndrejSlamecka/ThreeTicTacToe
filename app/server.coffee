@@ -4,10 +4,7 @@ passport = require('passport')
 session = require('express-session')
 MemoryStore = session.MemoryStore
 WebSocketServer = require('ws').Server
-redis = require('redis')
 RedisStore = require('connect-redis')(session)
-
-client = redis.createClient()
 
 store = new RedisStore
 	host:'127.0.0.1',
@@ -24,7 +21,7 @@ bodyParser = require('body-parser')
 GameManager = require('./GameManager.coffee')
 HumanPlayer = require('./HumanPlayer.coffee')
 
-gm = new GameManager(client)
+gm = new GameManager()
 
 # HTTP server
 passwords = require('./config/passwords.js')

@@ -2,8 +2,6 @@
 Setup
 -----
 
-	Install redis
-
 	$ npm install [-g] grunt-cli
 	$ npm install
 
@@ -26,7 +24,4 @@ Watch
 
 	http://ttt.slamecka.cz/queueStatus
 
-TODO
-----
 
-* Persist games (they should survive server restart)
